@@ -1,0 +1,33 @@
+Spreedly PHP API
+Version 2.1
+
+Provides a convenient wrapper around the spreedly.com API.  Instead of
+mucking around with HTTP you can just use these objects to handle
+everything for you.
+
+By Luke Ehresman <luke@ehresman.org>
+Based on the Spreedly Ruby gem by Nathaniel Talbott
+
+REQUIREMENTS
+============
+php
+mod_curl
+mod_ssl
+
+INSTALL
+=======
+Simply copy class.spreedly.inc into your include path on your web server
+and include it in your PHP scripts.
+
+EXAMPLE #1 - Creating a subscriber with a free trial
+====================================================
+Spreedly::configure($my_site_name, $my_site_token);
+$sub = SpreedlySubscriber::create(78, "test@nospam.com", "testUser");
+$sub->activate_free_trial($trial_plan_id);
+
+
+EXAMPLE #2 - Getting a user and comping a month
+===============================================
+Spreedly::configure($my_site_name, $my_site_token);
+$sub = SpreedlySubscriber::find(78);
+$sub->comp(1, "months", "full");

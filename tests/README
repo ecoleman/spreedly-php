@@ -1,0 +1,3 @@
+To configure the tests, set up a test site in Spreedly, copy setup.default.inc
+to setup.inc, and update the values in setup.inc to contain the credentials
+of your new test site.
