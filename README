@@ -7,16 +7,19 @@ everything for you.
 
 By Luke Ehresman <luke@ehresman.org>
 
+
 REQUIREMENTS
 ============
 php (version 5.2 for SpreedlySubscriber::update functionality)
 mod_curl
 mod_ssl
 
+
 INSTALL
 =======
 Simply copy class.spreedly.inc into your include path on your web server
 and include it in your PHP scripts.
+
 
 EXAMPLE #1 - Creating a subscriber with a free trial
 ====================================================
@@ -30,3 +33,9 @@ EXAMPLE #2 - Getting a user and comping a month
 Spreedly::configure($my_site_name, $my_site_token);
 $sub = SpreedlySubscriber::find(78);
 $sub->comp(1, "months", "full");
+
+
+MORE EXAMPLES
+=============
+For more examples, see the unit tests in the test directory.
+

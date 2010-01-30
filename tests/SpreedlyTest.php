@@ -265,4 +265,70 @@ class SpreedlyTest extends PHPUnit_Framework_TestCase {
 		$sub = SpreedlySubscriber::find(75);
 		$this->assertTrue($sub->eligible_for_free_trial);
 	}
+
+	public function testCreateInvoice() {
+		global $test_site_name, $test_token;
+		Spreedly::configure($test_site_name, $test_token);
+		SpreedlySubscriber::wipe();
+
+		// create invoice for existing customer
+		$trial_plan = SpreedlySubscriptionPlan::find_by_name("Free Trial");
+		$sub = SpreedlySubscriber::create(75, null, "charlie");
+		$sub->activate_free_trial($trial_plan->id);
+		$sub = SpreedlySubscriber::find(75);
+
+		$annual = SpreedlySubscriptionPlan::find_by_name("Annual");
+		$invoice = SpreedlyInvoice::create($sub->get_id(), $annual->id, $sub->screen_name, "test@test.com");
+
+		$this->assertTrue($invoice->subscriber instanceof SpreedlySubscriber);
+		$this->assertEquals("charlie", $invoice->subscriber->screen_name);
+		$this->assertEquals(25, $invoice->line_items[0]->amount);
+
+		// create invoice for new customer
+		$monthly = SpreedlySubscriptionPlan::find_by_name("Monthly");
+		$invoice = SpreedlyInvoice::create(10, $monthly->id, "able", "able@test.com");
+		$this->assertTrue($invoice->subscriber instanceof SpreedlySubscriber);
+		$this->assertEquals("able", $invoice->subscriber->screen_name);
+		$this->assertEquals(2.50, $invoice->line_items[0]->amount);
+		$this->assertTrue(SpreedlySubscriber::find(10) instanceof SpreedlySubscriber);
+	}
+
+	public function testPayInvoice() {
+		global $test_site_name, $test_token;
+		Spreedly::configure($test_site_name, $test_token);
+		SpreedlySubscriber::wipe();
+
+		// create invoice for existing customer
+		$trial_plan = SpreedlySubscriptionPlan::find_by_name("Free Trial");
+		$sub = SpreedlySubscriber::create(75, null, "charlie");
+		$sub->activate_free_trial($trial_plan->id);
+		$sub = SpreedlySubscriber::find(75);
+
+		$annual = SpreedlySubscriptionPlan::find_by_name("Annual");
+		$invoice = SpreedlyInvoice::create($sub->get_id(), $annual->id, $sub->screen_name, "test@test.com");
+		$response = $invoice->pay("4222222222222", "visa", "123", "13", date("Y")+1, "Test", "User");
+		$this->assertTrue($response instanceof SpreedlyErrorList);
+
+		$response = $invoice->pay("4222222222222", "visa", "123", "12", date("Y")-1, "Test", "User");
+		$this->assertTrue($response instanceof SpreedlyErrorList);
+
+		// declined
+		try {
+			$response = $invoice->pay("4012888888881881", "visa", "123", "12", date("Y")+1, "Test", "User");
+			$this->fail("An exception should have been thrown");
+		} catch (SpreedlyException $e) {
+			$this->assertEquals(403, $e->getCode());
+		}
+
+		$response = $invoice->pay("4222222222222", "visa", "123", "12", date("Y")+1, "Test", "User");
+		$this->assertTrue($response->closed);
+
+		// test paying paid invoice
+		try {
+			$response = $invoice->pay("4222222222222", "visa", "123", "12", date("Y")+1, "Test", "User");
+			$this->fail("An exception should have been thrown");
+		} catch (SpreedlyException $e) {
+			$this->assertEquals(403, $e->getCode());
+		}
+	}
 }

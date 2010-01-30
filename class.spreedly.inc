@@ -166,30 +166,14 @@ class Spreedly {
 	 * an array of SpreedlySubscriber objects.
 	 */
 	public static function __parse_xml($xml, $node_name, $node_class) {
-		$dom = @DOMDocument::loadXML($xml);
+		if (is_string($xml))
+			$dom = @DOMDocument::loadXML($xml);
+		else
+			$dom = $xml;
 		if (!$dom) return null;
 
 		$node_list = $dom->getElementsByTagName($node_name);
-		$list = array();
-		for ($i=0; $i < $node_list->length; $i++) {
-			$node = $node_list->item($i)->firstChild;
-			$obj = new $node_class();
-			while ($node) {
-				if ($node->nodeType == XML_ELEMENT_NODE) {
-					$nodeName = str_replace("-", "_", $node->nodeName);
-					if (!is_numeric($node->nodeValue) && $tmp = strtotime($node->nodeValue))
-						$obj->$nodeName = $tmp;
-					else if ($node->nodeValue == "false")
-						$obj->$nodeName = false;
-					else if ($node->nodeValue == "true")
-						$obj->$nodeName = true;
-					else
-						$obj->$nodeName = $node->nodeValue;
-				}
-				$node = $node->nextSibling;
-			}
-			$list[] = $obj;
-		}
+		$list = self::__parse_dom_node_list($node_list, $node_class);
 
 		if (count($list) == 0)
 			return null;
@@ -197,6 +181,48 @@ class Spreedly {
 			return $list[0];
 		else
 			return $list;
+	}
+
+	public static function __parse_dom_node_list($node_list, $node_class) {
+		$list = array();
+		for ($i=0; $i < $node_list->length; $i++) {
+			if ($node_list->item($i) instanceof DOMElement) {
+				$list[] = self::__parse_dom_node($node_list->item($i), $node_class);
+			}
+		}
+		return $list;
+	}
+
+	public static function __parse_dom_node($node, $node_class) {
+		$node = $node->firstChild;
+		$obj = new $node_class();
+		while ($node) {
+			if ($node->nodeType == XML_ELEMENT_NODE) {
+				$nodeName = str_replace("-", "_", $node->nodeName);
+				if ($node->childNodes->length == 0 || ($node->childNodes->length == 1 && $node->firstChild->childNodes == 0)) {
+					if (!is_numeric($node->nodeValue) && $tmp = strtotime($node->nodeValue)) {
+						$obj->$nodeName = $tmp;
+					} else if ($node->nodeValue == "false") {
+						$obj->$nodeName = false;
+					} else if ($node->nodeValue == "true") {
+						$obj->$nodeName = true;
+					} else {
+						$obj->$nodeName = $node->nodeValue;
+					}
+				} else {
+					$class = "StdClass";
+					if ($nodeName == "subscriber")
+						$class = "SpreedlySubscriber";
+					if ($node->hasAttribute("type") && $node->getAttribute("type") == "array") {
+						$obj->$nodeName = self::__parse_dom_node_list($node->childNodes, $class);
+					} else {
+						$obj->$nodeName = self::__parse_dom_node($node, $class);
+					}
+				}
+			}
+			$node = $node->nextSibling;
+		}
+		return $obj;
 	}
 }
 
@@ -226,7 +252,7 @@ class SpreedlySubscriber {
 		if (preg_match("/^2..$/", $result->code)) {
 			return Spreedly::__parse_xml($result->response, "subscriber", "SpreedlySubscriber");
 		} else {
-			throw new SpreedlyException("Could not activate free trial for subscriber: {$result->response} ({$result->code})");
+			throw new SpreedlyException("Could not activate free trial for subscriber: {$result->response} ({$result->code})", $result->code);
 		}
 	}
 
@@ -238,7 +264,7 @@ class SpreedlySubscriber {
 		if (preg_match("/^2..$/", $result->code)) {
 			return null;
 		} else {
-			throw new SpreedlyException("Could not stop auto renew for subscriber: {$result->response} ({$result->code})");
+			throw new SpreedlyException("Could not stop auto renew for subscriber: {$result->response} ({$result->code})", $result->code);
 		}
 	}
 
@@ -270,7 +296,7 @@ class SpreedlySubscriber {
 		if (preg_match("/^2..$/", $result->code)) {
 			return Spreedly::__parse_xml($result->response, "subscriber", "SpreedlySubscriber");
 		} else {
-			throw new SpreedlyException("Could not comp subscriber: {$result->response} ({$result->code})");
+			throw new SpreedlyException("Could not comp subscriber: {$result->response} ({$result->code})", $result->code);
 		}
 	}
 
@@ -294,9 +320,9 @@ class SpreedlySubscriber {
 		if (preg_match("/^2..$/", $result->code)) {
 			return Spreedly::__parse_xml($result->response, "subscriber", "SpreedlySubscriber");
 		} else if ($result->code == 403) {
-			throw new SpreedlyException("Could not update subscriber: new customer_id already exists.");
+			throw new SpreedlyException("Could not update subscriber: new customer_id already exists.", $result->code);
 		} else {
-			throw new SpreedlyException("Could not update subscriber: {$result->response} ({$result->code})");
+			throw new SpreedlyException("Could not update subscriber: {$result->response} ({$result->code})", $result->code);
 		}
 	}
 
@@ -315,7 +341,7 @@ class SpreedlySubscriber {
 		if (preg_match("/^2..$/", $result->code)) {
 			return Spreedly::__parse_xml($result->response, "subscriber", "SpreedlySubscriber");
 		} else {
-			throw new SpreedlyException("Could not add lifetime comp to subscriber: {$result->response} ({$result->code})");
+			throw new SpreedlyException("Could not add lifetime comp to subscriber: {$result->response} ({$result->code})", $result->code);
 		}
 	}
 
@@ -334,7 +360,7 @@ class SpreedlySubscriber {
 		if (preg_match("/^2..$/", $result->code)) {
 			return Spreedly::__parse_xml($result->response, "subscriber", "SpreedlySubscriber");
 		} else {
-			throw new SpreedlyException("Could not add store credit to subscriber: {$result->response} ({$result->code})");
+			throw new SpreedlyException("Could not add store credit to subscriber: {$result->response} ({$result->code})", $result->code);
 		}
 	}
 
@@ -356,7 +382,7 @@ class SpreedlySubscriber {
 		if (preg_match("/^2..$/", $result->code)) {
 			return Spreedly::__parse_xml($result->response, "subscriber", "SpreedlySubscriber");
 		} else {
-			throw new SpreedlyException("Could not add fees to subscriber: {$result->response} ({$result->code})");
+			throw new SpreedlyException("Could not add fees to subscriber: {$result->response} ({$result->code})", $result->code);
 		}
 	}
 
@@ -370,7 +396,7 @@ class SpreedlySubscriber {
 		if (preg_match("/^2..$/", $result->code)) {
 			return null;
 		} else {
-			throw new SpreedlyException("Could not allow free trial for subscriber: {$result->response} ({$result->code})");
+			throw new SpreedlyException("Could not allow free trial for subscriber: {$result->response} ({$result->code})", $result->code);
 		}
 	}
 
@@ -401,7 +427,7 @@ class SpreedlySubscriber {
 		} else if ($result->code == 404) {
 			return null;
 		} else {
-			throw new SpreedlyException("Could not get all subscribers: {$result->response} ({$result->code})");
+			throw new SpreedlyException("Could not get all subscribers: {$result->response} ({$result->code})", $result->code);
 		}
 	}
 
@@ -424,9 +450,9 @@ class SpreedlySubscriber {
 		if (preg_match("/^2..$/", $result->code)) {
 			return Spreedly::__parse_xml($result->response, "subscriber", "SpreedlySubscriber");
 		} else if ($result->code == 403) {
-			throw new SpreedlyException("Could not create subscriber: no id passed OR already exists.");
+			throw new SpreedlyException("Could not create subscriber: no id passed OR already exists.", $result->code);
 		} else {
-			throw new SpreedlyException("Could not create subscriber: {$result->response} ({$result->code})");
+			throw new SpreedlyException("Could not create subscriber: {$result->response} ({$result->code})", $result->code);
 		}
 	}
 
@@ -453,7 +479,7 @@ class SpreedlySubscriber {
 		} else if ($result->code == 404) {
 			return null;
 		} else {
-			throw new SpreedlyException("Could not find subscriber: {$result->response} ({$result->code})");
+			throw new SpreedlyException("Could not find subscriber: {$result->response} ({$result->code})", $result->code);
 		}
 	}
 
@@ -496,7 +522,7 @@ class SpreedlySubscriptionPlan {
 				$list = array($list);
 			return $list;
 		} else {
-			throw new SpreedlyException("Could not get subscription plans: {$result->response} ({$result->code})");
+			throw new SpreedlyException("Could not get subscription plans: {$result->response} ({$result->code})", $result->code);
 		}
 	}
 
@@ -528,7 +554,77 @@ class SpreedlySubscriptionPlan {
 }
 
 /**
+ * Class: SpreedlyInvoice
+ */
+class SpreedlyInvoice {
+	public static function create($customer_id, $subscription_id, $screen_name=null, $email=null) {
+		$obj = new StdClass();
+		$obj->invoice = new StdClass();
+		$obj->invoice->subscription_plan_id = $subscription_id;
+		$obj->invoice->subscriber = new StdClass();
+		$obj->invoice->subscriber->customer_id = $customer_id;
+		$obj->invoice->subscriber->screen_name = $screen_name;
+		$obj->invoice->subscriber->email = $email;
+		$xml = Spreedly::__to_xml_params($obj);
+		$result = Spreedly::__curl_request("/invoices.xml", "post", $xml);
+
+		if (preg_match("/^2..$/", $result->code)) {
+			return Spreedly::__parse_xml($result->response, "invoice", "SpreedlyInvoice");
+		} else {
+			throw new SpreedlyException("Could not create invoice: {$result->response} ({$result->code})", $result->code);
+		}
+	}
+
+	public function pay($card_number, $card_type, $verification_value, $month, $year, $first_name, $last_name) {
+		$obj = new StdClass();
+		$obj->payment = new StdClass();
+		$obj->payment->credit_card = new StdClass();
+		$obj->payment->credit_card->number = $card_number;
+		$obj->payment->credit_card->card_type = $card_type;
+		$obj->payment->credit_card->verification_value = $verification_value;
+		$obj->payment->credit_card->month = $month;
+		$obj->payment->credit_card->year = $year;
+		$obj->payment->credit_card->first_name = $first_name;
+		$obj->payment->credit_card->last_name = $last_name;
+		$xml = Spreedly::__to_xml_params($obj);
+		$result = Spreedly::__curl_request("/invoices/{$this->token}/pay.xml", "put", $xml);
+
+		if ($result->code == 404) {
+			throw new SpreedlyException("The specified invoice could not be found.", $result->code);
+		} else if ($result->code == 422) {
+			return new SpreedlyErrorList(Spreedly::__parse_xml($result->response, "errors", "StdClass"));
+		} else if ($result->code == 504) {
+			throw new SpreedlyException("Gateway timeout.", $result->code);
+		} else if (preg_match("/^2..$/", $result->code)) {
+			// success!
+			return Spreedly::__parse_xml($result->response, "invoice", "SpreedlyInvoice");
+		} else {
+			throw new SpreedlyException("Could not pay invoice: {$result->response} ({$result->code})", $result->code);
+		}
+	}
+}
+
+
+/**
  * Class: SpreedlyException
  */
 class SpreedlyException extends Exception {
+}
+
+/**
+ * Class: SpreedlyErrorList
+ */
+class SpreedlyErrorList {
+	private $errors = array();
+
+	public function __construct($list) {
+		if ($list->error)
+			$this->errors[] = $list->error;
+		else
+			$this->errors = $list;
+	}
+
+	public function get_errors() {
+		return $errors;
+	}
 }
