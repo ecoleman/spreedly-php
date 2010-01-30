@@ -1,16 +1,15 @@
 Spreedly PHP API
-Version 2.1
+Version 2.2
 
 Provides a convenient wrapper around the spreedly.com API.  Instead of
 mucking around with HTTP you can just use these objects to handle
 everything for you.
 
 By Luke Ehresman <luke@ehresman.org>
-Based on the Spreedly Ruby gem by Nathaniel Talbott
 
 REQUIREMENTS
 ============
-php
+php (version 5.2 for SpreedlySubscriber::update functionality)
 mod_curl
 mod_ssl
 

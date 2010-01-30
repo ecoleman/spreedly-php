@@ -1,0 +1,8 @@
+v2.2 - January 30, 2010
+=======================
+- moved source to github
+- new method: SpreedlySubscriber::update (requires PHP 5.2)
+- new method: SpreedlySubscriber::lifetime_comp
+- new method: SpreedlySubscriber::add_store_credit
+- new method: SpreedlySubscriber::add_fee
+- new method: SpreedlySubscriber::allow_free_trial
