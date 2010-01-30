@@ -1,6 +1,5 @@
 <?php
 /**
- * Version 2.1
  * Copyright (c) 2009 Luke Ehresman
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
