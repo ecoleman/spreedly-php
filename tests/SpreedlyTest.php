@@ -331,4 +331,22 @@ class SpreedlyTest extends PHPUnit_Framework_TestCase {
 			$this->assertEquals(403, $e->getCode());
 		}
 	}
+
+	public function testGetTransactions() {
+		global $test_site_name, $test_token;
+		Spreedly::configure($test_site_name, $test_token);
+		SpreedlySubscriber::wipe();
+
+		// create invoice for existing customer
+		$trial_plan = SpreedlySubscriptionPlan::find_by_name("Free Trial");
+		$sub1 = SpreedlySubscriber::create(75, null, "able");
+		$sub1->lifetime_comp("full");
+		$sub2 = SpreedlySubscriber::create(76, null, "baker");
+		$sub2->activate_free_trial($trial_plan->id);
+		$sub3 = SpreedlySubscriber::create(77, null, "charlie");
+		$sub3->activate_free_trial($trial_plan->id);
+
+		$transactions = Spreedly::get_transactions();
+		print_r($transactions);
+	}
 }

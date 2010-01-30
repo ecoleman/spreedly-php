@@ -83,6 +83,20 @@ class Spreedly {
 	}
 
 	/**
+	 * Method: get_transactions
+	 *
+	 * Returns an array of transaction data.
+	 */
+	public static function get_transactions($since_id=null) {
+		$params = null;
+		if (is_numeric($since_id))
+			$params["since_id"] = $since_id;
+		$result = Spreedly::__curl_request("/transactions.xml", "get", $params);
+		print_r($result);
+		return Spreedly::__parse_xml($result->response, "transaction", "StdClass");
+	}
+
+	/**
 	 * Method: __curl_request
 	 *
 	 * Internal method used to make an HTTP request to Spreedly.
