@@ -163,7 +163,7 @@ class Spreedly {
 				$tag = str_replace("_", "-", $tag);
 			$result .= "<$tag>";
 			if (is_object($value))
-				$result .= self::__to_xml_params($value, $replace);
+				$result .= self::__to_xml_params($value, $change);
 			else
 				$result .= $value;
 			$result .= "</$tag>";
