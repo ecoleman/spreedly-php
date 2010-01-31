@@ -1,5 +1,6 @@
 v2.3 -
 =======================
+- rewrote XML creation to handle escaping special characters
 - new method: Spreedly::get_transactions
 - fixed a bug in __to_xml_params causing -/_ translation to fail
 
