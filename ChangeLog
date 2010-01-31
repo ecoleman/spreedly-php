@@ -1,4 +1,4 @@
-v2.3 -
+v2.3 - January 31, 2010
 =======================
 - rewrote XML creation to handle escaping special characters
 - new method: Spreedly::get_transactions
