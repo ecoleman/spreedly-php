@@ -161,19 +161,26 @@ class Spreedly {
 	 * Converts an object structure into XML
 	 */
 	public static function __to_xml_params($hash, $change=true) {
-		$result = "";
+		$dom = new DOMDocument("1.0");
+		$node = self::__create_xml_node($dom, $dom, $hash, $change);
+		return $dom->saveXML();
+	}
+	private static function __create_xml_node($dom, $parentNode, $hash, $change=true) {
 		foreach ($hash as $key=>$value) {
 			$tag = $key;
 			if ($change)
 				$tag = str_replace("_", "-", $tag);
-			$result .= "<$tag>";
-			if (is_object($value))
-				$result .= self::__to_xml_params($value, $change);
-			else
-				$result .= $value;
-			$result .= "</$tag>";
+
+			$node = $dom->createElement($tag);
+			if (is_object($value)) {
+				self::__create_xml_node($dom, $node, $value, $change);
+			} else {
+				$text = $dom->createTextNode($value);
+				$node->appendChild($text);
+			}
+
+			$parentNode->appendChild($node);
 		}
-		return $result;
 	}
 
 	/**

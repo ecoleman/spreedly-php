@@ -11,7 +11,16 @@ class SpreedlyTest extends PHPUnit_Framework_TestCase {
 		$obj->second->two = 234;
 		$obj->third = "three";
 		$xml = Spreedly::__to_xml_params($obj);
-		$this->assertEquals("<first>one</first><second><one>123</one><two>234</two></second><third>three</third>", $xml);
+		$this->assertRegExp("/<first>one<\/first>\s*<second><one>123<\/one><two>234<\/two><\/second>\s*<third>three<\/third>/", $xml);
+
+		// test funky encoding
+		$obj = new StdClass();
+		$obj->container = new StdClass();
+		$obj->container->user1 = "Able & Baker";
+		$obj->container->user2 = "Able < Baker >";
+		$obj->container->user3 = "Able/Baker&amp;Charlie";
+		$xml = Spreedly::__to_xml_params($obj);
+		$this->assertRegExp("/<container><user1>Able &amp; Baker<\/user1><user2>Able &lt; Baker &gt;<\/user2><user3>Able\/Baker&amp;amp;Charlie<\/user3><\/container>/", $xml);
 	}
 
 	public function testWipe() {
