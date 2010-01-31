@@ -347,6 +347,12 @@ class SpreedlyTest extends PHPUnit_Framework_TestCase {
 		$sub3->activate_free_trial($trial_plan->id);
 
 		$transactions = Spreedly::get_transactions();
-		print_r($transactions);
+		$this->assertEquals(3, count($transactions));
+		$this->assertEquals("free_trial", $transactions[0]->detail->payment_method);
+
+		// test getting subset of transactions
+		$transactions = Spreedly::get_transactions($transactions[1]->id);
+		$this->assertEquals(1, count($transactions));
+		$this->assertEquals(77, $transactions[0]->subscriber_customer_id);
 	}
 }

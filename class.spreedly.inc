@@ -22,7 +22,7 @@
  *
  */
 
-define("VERBOSE", false);
+define("SPREEDLY_VERBOSE", false);
 
 /**
  * Class: Spreedly
@@ -87,12 +87,18 @@ class Spreedly {
 	 * Returns an array of transaction data.
 	 */
 	public static function get_transactions($since_id=null) {
-		$params = null;
-		if (is_numeric($since_id))
-			$params["since_id"] = $since_id;
-		$result = Spreedly::__curl_request("/transactions.xml", "get", $params);
-		print_r($result);
-		return Spreedly::__parse_xml($result->response, "transaction", "StdClass");
+		$since_param = "";
+		if (is_numeric($since_id)) {
+			$since_param = "?since_id=$since_id";
+		}
+		$result = Spreedly::__curl_request("/transactions.xml$since_param", "get");
+		$list = Spreedly::__parse_xml($result->response, "transaction", "StdClass");
+
+		// __parse_xml returns an object if there's only one, so turn it back into
+		// an array here for consistency.
+		if (is_object($list))
+			return array($list);
+		return $list;
 	}
 
 	/**
@@ -102,7 +108,7 @@ class Spreedly {
 	 */
 	public static function __curl_request($url, $method="get", $data=null) {
 		$ch = curl_init(self::$base_uri.$url);
-		if (VERBOSE) {
+		if (SPREEDLY_VERBOSE) {
 			echo "\n\n\n###############################################\n";
 			curl_setopt($ch, CURLOPT_VERBOSE, true);
 		}
