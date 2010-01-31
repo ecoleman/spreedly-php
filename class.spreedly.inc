@@ -1,6 +1,7 @@
 <?php
 /**
- * Copyright (c) 2009 Luke Ehresman
+ * Copyright (c) 2009-2010
+ * Luke Ehresman - http://luke.ehresman.org
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"),
@@ -31,9 +32,6 @@ define("SPREEDLY_VERBOSE", false);
  * of mucking around with HTTP you can just Spreedly::configure and
  * SpreedlySubscriber::find.  Much of the functionality is hung off
  * the SpreedlySubscriber class.
- *
- * By Luke Ehresman <luke@ehresman.org>
- * Based on the Spreedly Ruby gem by Nathaniel Talbott (v. 1.2.1)
  */
 class Spreedly {
 	static $token;
