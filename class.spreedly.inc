@@ -272,12 +272,6 @@ class Spreedly {
  */
 class SpreedlySubscriber {
 	/**
-	 * Method: __construct
-	 */
-	public function __construct() {
-	}
-
-	/**
 	 * Method: activate_free_trial
 	 *
 	 * Activates a free trial on the subscriber.  Requires subscription_id
