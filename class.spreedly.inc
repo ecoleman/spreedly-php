@@ -84,7 +84,12 @@ class Spreedly {
 	/**
 	 * Method: get_transactions
 	 *
-	 * Returns an array of transaction data.
+	 * Returns an array of transaction data.  Spreedly returns transactions
+	 * in batches of 50 at a time.  So you need to keep calling this, with the
+	 * last id as a parameter, until nothing is returned.  See the Spreedly
+	 * integration reference for details on how this works:
+	 *
+	 * https://spreedly.com/manual/integration-reference/show-transactions/
 	 */
 	public static function get_transactions($since_id=null) {
 		$since_param = "";
@@ -184,7 +189,7 @@ class Spreedly {
 	}
 
 	/**
-	 * Method:: __parse_xml
+	 * Method: __parse_xml
 	 *
 	 * This will take an XML representation of a subscriber, or a list of
 	 * subscribers, and create instances of the SpreedlySubscriber object.
@@ -209,7 +214,13 @@ class Spreedly {
 			return $list;
 	}
 
-	public static function __parse_dom_node_list($node_list, $node_class) {
+	/**
+	 * Method: __parse_dom_node_list
+	 *
+	 * This is a helper method for __parse_xml.  It's private, and you should
+	 * never need to use it.  Use __parse_xml instead.
+	 */
+	private static function __parse_dom_node_list($node_list, $node_class) {
 		$list = array();
 		for ($i=0; $i < $node_list->length; $i++) {
 			if ($node_list->item($i) instanceof DOMElement) {
@@ -219,7 +230,13 @@ class Spreedly {
 		return $list;
 	}
 
-	public static function __parse_dom_node($node, $node_class) {
+	/**
+	 * Method: __parse_dom_node
+	 *
+	 * This is a helper method for __parse_xml.  It's private, and you should
+	 * never need to use it.  Use __parse_xml instead.
+	 */
+	private static function __parse_dom_node($node, $node_class) {
 		$node = $node->firstChild;
 		$obj = new $node_class();
 		while ($node) {
@@ -284,6 +301,8 @@ class SpreedlySubscriber {
 
 	/**
 	 * Method: stop_auto_renew
+	 *
+	 * Turn off automatic renewal of subscriptions in Spreedly.
 	 */
 	public function stop_auto_renew() {
 		$result = Spreedly::__curl_request("/subscribers/{$this->customer_id}/stop_auto_renew.xml", "post");
@@ -581,8 +600,27 @@ class SpreedlySubscriptionPlan {
 
 /**
  * Class: SpreedlyInvoice
+ *
+ * Invoices are used to create a custom billing interface so users don't
+ * have to leave your site to pay through Spreedly.  In general, you first
+ * create an invoice, then you pay the invoice using user-provided
+ * credentials.
+ *
+ * NOTE: There are a bunch of special conditions you should consider when
+ * displaying an invoice to a user.  Please be sure to read through the
+ * Spreedly integration guide before implementing a payment interface:
+ * https://spreedly.com/manual/integration-reference/payments-api/displaying-an-invoice/
  */
 class SpreedlyInvoice {
+	/**
+	 * STATIC Method: create
+	 *
+	 * This will create an invoice for a particular customer.  It ties a
+	 * customer with a subscription plan that you've already set in place.
+	 *
+	 * Example:
+	 *   SpreedlyInvoice::create($sub->get_id(), $plan->id, "Bob", "bob@nospam.com");
+	 */
 	public static function create($customer_id, $subscription_id, $screen_name=null, $email=null) {
 		$obj = new StdClass();
 		$obj->invoice = new StdClass();
@@ -601,6 +639,34 @@ class SpreedlyInvoice {
 		}
 	}
 
+	/**
+	 * Method: pay
+	 *
+	 * This will pay an existing invoice given the supplied credit card
+	 * information.
+	 *
+	 * NOTE:  This will throw a SpreedlyException if there is a problem
+	 * connecting or if there is any unknown issue.  This will return a
+	 * SpreedlyErrorList object if there is invalid data that needs to be
+	 * verified with the user (e.g. invalid expiration date).  This will return
+	 * the updated invoice on success.
+	 *
+	 * Example:
+	 *   $invoice = SpreedlyInvoice::create($sub->get_id(), $plan->id, "Bob", "bob@nospam.com");
+	 *   try {
+	 *       $result = $invoice->pay($cardno, "visa", "123", "12", "2010", "Bob", "Barker");
+	 *       if ($result instanceof SpreedlyErrorList) {
+	 *           foreach ($result->get_errors() as $error) {
+	 *               echo "<p class=\"error\">$error</p>";
+	 *           }
+	 *       } else {
+	 *           echo "<p class=\"notice\">SUCCESS!</p>";
+	 *       }
+	 *   } catch (SpreedlyException $e) {
+	 *       echo "<p class=\"error\">Unknown error: {$e->getMessage()}!</p>";
+	 *   }
+	 *
+	 */
 	public function pay($card_number, $card_type, $verification_value, $month, $year, $first_name, $last_name) {
 		$obj = new StdClass();
 		$obj->payment = new StdClass();
