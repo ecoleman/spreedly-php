@@ -183,6 +183,39 @@ class SpreedlyTest extends PHPUnit_Framework_TestCase {
 		$this->assertFalse($sub->recurring);
 	}
 
+	public function testComp() {
+		global $test_site_name, $test_token;
+		Spreedly::configure($test_site_name, $test_token);
+		SpreedlySubscriber::wipe();
+
+		// test comping when user has no subscription
+		$sub = SpreedlySubscriber::create(75, null, "charlie");
+		try {
+			$sub->comp(32, "days");
+			$this->fail("Exception should be thrown, no feature level given");
+		} catch (SpreedlyException $e) {
+			// good
+		}
+		$sub->comp(32, "days", "basic");
+		$sub = SpreedlySubscriber::find(75);
+		$this->assertTrue($sub->active);
+		$this->assertFalse($sub->on_trial);
+
+		// test comping when user has a paid subscription already
+		$sub = SpreedlySubscriber::create(76, null, "baker");
+		$annual = SpreedlySubscriptionPlan::find_by_name("Annual");
+		$invoice = SpreedlyInvoice::create($sub->get_id(), $annual->id, $sub->screen_name, "test@test.com");
+		$response = $invoice->pay("4222222222222", "visa", "123", "12", date("Y")+1, "Test", "User");
+		$sub = SpreedlySubscriber::find(76);
+		$prev_active_until = $sub->active_until;
+		$sub = $sub->comp(30, "days");
+		$this->assertEquals(30, ($sub->active_until - $prev_active_until)/(60*60*24));
+
+		// make sure this still works, even though the 3rd param should be ignored
+		$sub = $sub->comp(1, "days", "full");
+		$this->assertEquals(31, ($sub->active_until - $prev_active_until)/(60*60*24));
+	}
+
 	public function testSubscriberUrl() {
 		global $test_site_name, $test_token;
 		Spreedly::configure($test_site_name, $test_token);

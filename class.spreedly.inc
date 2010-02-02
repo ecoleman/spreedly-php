@@ -315,17 +315,23 @@ class SpreedlySubscriber {
 	 * enforced).
 	 */
 	public function comp($quantity, $units, $feature_level=null) {
+		if ($this->lifetime_subscription) {
+			return $this;
+		}
+
 		$type = $this->active ? "complimentary_time_extensions" : "complimentary_subscriptions";
-		if ($type == "complimentary_subscriptions" && !$feature_level)
+		if ($type == "complimentary_subscriptions" && !$feature_level) {
 			throw new SpreedlyException("Feature level can't be blank when comping an inactive subscription");
+		}
 
 		$node_name = substr($type, 0, -1);
 		$obj = new StdClass();
 		$obj->$node_name = new StdClass();
 		$obj->$node_name->duration_quantity = $quantity;
 		$obj->$node_name->duration_units = $units;
-		if ($feature_level)
+		if ($type == "complimentary_subscriptions" && $feature_level) {
 			$obj->$node_name->feature_level = $feature_level;
+		}
 
 		$xml = Spreedly::__to_xml_params($obj);
 		$result = Spreedly::__curl_request("/subscribers/{$this->customer_id}/$type.xml", "post", $xml);
