@@ -219,14 +219,44 @@ class SpreedlyTest extends PHPUnit_Framework_TestCase {
 	public function testSubscriberUrl() {
 		global $test_site_name, $test_token;
 		Spreedly::configure($test_site_name, $test_token);
-		$url = Spreedly::get_subscribe_url(123, "full");
-		$this->assertEquals("https://spreedly.com/{$test_site_name}/subscribers/123/subscribe/full/", $url);
 
-		$url = Spreedly::get_subscribe_url(123, "full", "test_user");
-		$this->assertEquals("https://spreedly.com/{$test_site_name}/subscribers/123/subscribe/full/test_user", $url);
+		$url = Spreedly::get_subscribe_url(123, 10);
+		$this->assertEquals("https://spreedly.com/{$test_site_name}/subscribers/123/subscribe/10", $url);
 
-		$url = Spreedly::get_subscribe_url(123, "full", "test/ user");
-		$this->assertEquals("https://spreedly.com/{$test_site_name}/subscribers/123/subscribe/full/test%2F+user", $url);
+		$url = Spreedly::get_subscribe_url(123, 10, "test_user");
+		$this->assertEquals("https://spreedly.com/{$test_site_name}/subscribers/123/subscribe/10/test_user", $url);
+
+		$url = Spreedly::get_subscribe_url(123, 10, "test/ user");
+		$this->assertEquals("https://spreedly.com/{$test_site_name}/subscribers/123/subscribe/10/test%2F+user", $url);
+
+		$url = Spreedly::get_subscribe_url(123, 10, array(
+				"return_url"=>"http://www.google.com",
+				"email"=>"test@nospam.com",
+				"token"=>"XYZ"
+			));
+		$this->assertEquals("https://spreedly.com/{$test_site_name}/subscribers/123/XYZ/subscribe/10?return_url=http%3A%2F%2Fwww.google.com&email=test%40nospam.com", $url);
+
+		$url = Spreedly::get_subscribe_url(123, 10, array(
+				"screen_name"=>"joe",
+				"email"=>"test@nospam.com",
+			));
+		$this->assertEquals("https://spreedly.com/{$test_site_name}/subscribers/123/subscribe/10/joe?email=test%40nospam.com", $url);
+
+		$url = Spreedly::get_subscribe_url(123, 10, array(
+				"screen_name"=>"joe"
+			));
+		$this->assertEquals("https://spreedly.com/{$test_site_name}/subscribers/123/subscribe/10/joe", $url);
+
+		try {
+			$url = Spreedly::get_subscribe_url(123, 10, array(
+					"email"=>"test@nospam.com",
+					"xyz"=>"http://www.google.com",
+					"token"=>"XYZ"
+				));
+			$this->fail("expected an exception because xyz isn't valid");
+		} catch (Exception $e) {
+			// good
+		}
 	}
 
 	public function testUpdate() {

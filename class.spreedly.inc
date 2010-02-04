@@ -73,10 +73,70 @@ class Spreedly {
 	 * Method: get_subscribe_url
 	 *
 	 * Generates a subscribe url for the given user id and plan.
+	 *
+	 * Throws: Exception if the parameters are invalid.
+	 *
+	 * Parameters:
+	 *  $id - the subscriber id
+	 *  $plan_id - the spreedly plan id
+	 *  $options (optional) - this can be a string (in which case, it is used
+	 *     as the screen_name, for legacy purposes), or an array with any of the
+	 *     following properties.  All of these are optional:
+	 *        "token" => the subscriber's token, provided by spreedly
+	 *        "screen_name" => the screen name for this user
+	 *        "first_name" => first name to pre-populate into the form
+	 *        "last_name" => last name to pre-populate into the form
+	 *        "email" => email to pre-populate into the form
+	 *        "return_url" => url for the "Continue" button (overrides the site default)
+	 *    See the API reference for more details:
+	 *      http://spreedly.com/manual/integration-guide/expose-a-subscribe-link/
+	 *
+	 * Example:
+	 *  $url = Spreedly::get_subscribe_url(123, 10, array(
+	 *          "return_url"=>"http://www.google.com",
+	 *          "email"=>"test@nospam.com",
+	 *          "token"=>"XYZ"
+	 *      ));
 	 */
-	public static function get_subscribe_url($id, $plan, $screen_name=null) {
-		$screen_name = ($screen_name ? urlencode($screen_name) : "");
-		return "https://spreedly.com/".self::$site_name."/subscribers/$id/subscribe/$plan/$screen_name";
+	public static function get_subscribe_url($id, $plan_id, $options=null) {
+		if (!is_integer($plan_id)) {
+			throw new Exception("plan_id must be an integer");
+		}
+
+		$url = "https://spreedly.com/".self::$site_name."/subscribers/$id";
+		if (is_string($options)) {
+			// In this case, $options is a string representing the screen name.
+			// For backwards compatibility only.
+			// Don't use this except for legacy code.
+			$url .= "/subscribe/$plan_id/".urlencode($options);
+		} else if (is_array($options)) {
+			// we have an array of options.
+			if (isset($options['token'])) {
+				$url .= "/".urlencode($options['token']);
+				unset($options['token']);
+			}
+			$url .= "/subscribe/$plan_id";
+			if (isset($options['screen_name'])) {
+				$url .= "/".urlencode($options['screen_name']);
+				unset($options['screen_name']);
+			}
+
+			$valid_params = array("first_name", "last_name", "email", "return_url");
+			$query_values = array();
+			foreach ($options as $key=>$value) {
+				if (!in_array($key, $valid_params))
+					throw new Exception("The key '$key' is not valid for Spreedly::get_subscribe_url");
+				$query_values[] = $key."=".urlencode($value);
+			}
+			if (count($query_values)) {
+				$url .= "?".implode("&", $query_values);
+			}
+			return $url;
+		} else {
+			// in this case, we only have a $id and $plan_id.  This is the base case.
+			$url .= "/subscribe/$plan_id";
+		}
+		return $url;
 	}
 
 	/**

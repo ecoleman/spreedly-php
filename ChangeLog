@@ -1,5 +1,10 @@
-v2.4 -
-======================
+v2.5 - February 5, 2010
+=======================
+- added Spreedly's new options to the Spreedly::get_subscribe_url method
+	(it's still backwards compatible)
+
+v2.4 - February 2, 2010
+=======================
 - added some extra sanity checking to SpreedlySubscriber::comp
 
 v2.3 - January 31, 2010
