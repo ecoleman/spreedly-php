@@ -775,6 +775,6 @@ class SpreedlyErrorList {
 	}
 
 	public function get_errors() {
-		return $errors;
+		return $this->errors;
 	}
 }
