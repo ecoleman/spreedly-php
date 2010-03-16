@@ -1,3 +1,7 @@
+v2.6 -
+=======================
+- Fixed bug in error list that returned a null variable [Christoffer Lejdborg]
+
 v2.5 - February 5, 2010
 =======================
 - added Spreedly's new options to the Spreedly::get_subscribe_url method
