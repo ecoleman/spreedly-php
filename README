@@ -7,12 +7,19 @@ CURL, you can use these objects to handle everything for you.  Some
 examples are provided, but for some really good examples, check out
 the unit tests.
 
+   *************************************************
+   *   Consulting services are available to help   *
+   *   integrate this with your site or project:   *
+   *   http://www.tebros.com                       *
+   *************************************************
+
 Report any issues in GitHub:
 http://github.com/lehresman/spreedly-php/issues
 
 CONTRIBUTORS
 ============
 Luke Ehresman - http://luke.ehresman.org
+Beau West - http://beaudesigns.net
 Christoffer Lejdborg - http://www.lejdborg.se
 
 
