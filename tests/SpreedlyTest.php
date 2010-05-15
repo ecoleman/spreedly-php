@@ -312,17 +312,6 @@ class SpreedlyTest extends PHPUnit_Framework_TestCase {
 		$this->assertEquals(2.50, $sub->store_credit);
 	}
 
-	public function testAddFees() {
-		global $test_site_name, $test_token;
-		Spreedly::configure($test_site_name, $test_token);
-		SpreedlySubscriber::wipe();
-
-		$sub = SpreedlySubscriber::create(75, null, "charlie");
-		$sub->comp(1, "months", "full");
-		$this->assertEquals(75, $sub->get_id());
-		$sub->add_fee("Daily Bandwidth Charge", "313 MB used", "Traffic Fees", 2.34);
-	}
-
 	public function testAllowFreeTrial() {
 		global $test_site_name, $test_token;
 		Spreedly::configure($test_site_name, $test_token);
@@ -402,6 +391,10 @@ class SpreedlyTest extends PHPUnit_Framework_TestCase {
 		} catch (SpreedlyException $e) {
 			$this->assertEquals(403, $e->getCode());
 		}
+
+		// test adding fees
+		$this->assertEquals(75, $sub->get_id());
+		$sub->add_fee("Daily Bandwidth Charge", "313 MB used", "Traffic Fees", 2.34);
 	}
 
 	public function testGetTransactions() {
