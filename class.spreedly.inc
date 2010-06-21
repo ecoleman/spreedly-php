@@ -206,6 +206,11 @@ class Spreedly {
 			curl_setopt($ch, CURLOPT_INFILE, $fh);
 			curl_setopt($ch, CURLOPT_INFILESIZE, strlen($data));
 			curl_setopt($ch, CURLOPT_PUT, true);
+			curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+					"Content-Type: text/xml",
+					"Accept: text/xml",
+					"Expect:"
+				));
 			break;
 		default:
 			curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "GET");
