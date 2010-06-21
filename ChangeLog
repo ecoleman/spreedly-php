@@ -1,6 +1,7 @@
-v2.6 -
+v2.6 - June 21, 2010
 =======================
 - Fixed bug in error list that returned a null variable [Christoffer Lejdborg]
+- Fixed bug caused by PUT headers not explicitly set [thejohnny]
 
 v2.5 - February 5, 2010
 =======================
